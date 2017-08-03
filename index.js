@@ -36,8 +36,10 @@ app.get('/hi', function (req, res) {
 
 app.post('/dress', function (req, res) {
     var city;
-    if (req.params.city){
-        city = req.params.city;
+    if (city){
+
+        city =  req.body.result && req.body.result.parameters && req.body.result.parameters.echoText;
+
     }
     else
     {
