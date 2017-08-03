@@ -2,10 +2,12 @@ const express = require('express');
 const app = express();
 const request = require('request');
 
+
 app.get('/hi', function (req, res) {
     var city;
     if (req.query.city){
         city = req.query.city;
+        console.log(req.query.city);
     }
     else
     {
