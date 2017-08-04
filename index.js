@@ -1,105 +1,131 @@
-const express = require('express');
-const app = express();
-const request = require('request');
+var fs = require('fs');
+var readline = require('readline');
+var google = require('googleapis');
+var googleAuth = require('google-auth-library');
 
+// If modifying these scopes, delete your previously saved credentials
+// at ~/.credentials/calendar-nodejs-quickstart.json
+var SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+    process.env.USERPROFILE) + '/.credentials/';
+var TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
 
-app.get('/hi', function (req, res) {
-    var city;
-    if (req.query.city){
-        city = req.query.city;
-        console.log(req.query.city);
+console.log(TOKEN_PATH);
+
+// Load client secrets from a local file.
+fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    if (err) {
+        console.log('Error loading client secret file: ' + err);
+        return;
     }
-    else
-    {
-        city = "london";
-    }
-    var yahooweather = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22' + city + '%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
-    request(yahooweather, function (error, response, body) {
-        var weatherJson = {}
-        if (error){
-            response.status(500);
-        }
-        else {
-            weatherJson = JSON.parse(body).query.results.channel.item.forecast[0];
-            weatherJson.location = JSON.parse(body).query.results.channel.location;
-            weatherJson.type = 0;
-            weatherJson.speech =  "Yo it looks like today in " + weatherJson.location.city + " will be a high of " +
-                weatherJson.high + " and a low of " + weatherJson.low + ". " +
-                getDressCode(weatherJson);
-            weatherJson.displayText = weatherJson.speech;
-            weatherJson.data = {};
-            weatherJson.contextOut = [ ];
-            weatherJson.source = " Our weather App"
-            res.json(weatherJson);
-        }
-    })
+    // Authorize a client with the loaded credentials, then call the
+    // Google Calendar API.
+    authorize(JSON.parse(content), listEvents);
 });
 
+/**
+ * Create an OAuth2 client with the given credentials, and then execute the
+ * given callback function.
+ *
+ * @param {Object} credentials The authorization client credentials.
+ * @param {function} callback The callback to call with the authorized client.
+ */
+function authorize(credentials, callback) {
+    var clientSecret = credentials.installed.client_secret;
+    var clientId = credentials.installed.client_id;
+    var redirectUrl = credentials.installed.redirect_uris[0];
+    var auth = new googleAuth();
+    var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
-app.post('/dress', function (req, res) {
-    var city;
-    if (city){
-
-        city =  req.body.result && req.body.result.parameters && req.body.result.parameters.echoText;
-
-    }
-    else
-    {
-        city = "london";
-    }
-    var yahooweather = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22' + city + '%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
-    request(yahooweather, function (error, response, body) {
-        var weatherJson = {}
-        if (error){
-            response.status(500);
+    // Check if we have previously stored a token.
+    fs.readFile(TOKEN_PATH, function(err, token) {
+        if (err) {
+            getNewToken(oauth2Client, callback);
+        } else {
+            oauth2Client.credentials = JSON.parse(token);
+            callback(oauth2Client);
         }
-        else {
-            weatherJson = JSON.parse(body).query.results.channel.item.forecast[0];
-            weatherJson.location = JSON.parse(body).query.results.channel.location;
-            weatherJson.type = 0;
-            weatherJson.speech =  "Yo it looks like today in " + weatherJson.location.city + " it will be a high of " +
-                weatherJson.high + " and a low of " + weatherJson.low + ". " +
-                getDressCode(weatherJson);
-            weatherJson.displayText = weatherJson.speech;
-            weatherJson.data = {};
-            weatherJson.contextOut = [ ];
-            weatherJson.source = " Our weather App";
+    });
+}
 
+/**
+ * Get and store new token after prompting for user authorization, and then
+ * execute the given callback with the authorized OAuth2 client.
+ *
+ * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
+ * @param {getEventsCallback} callback The callback to call with the authorized
+ *     client.
+ */
+function getNewToken(oauth2Client, callback) {
+    var authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES
+    });
+    console.log('Authorize this app by visiting this url: ', authUrl);
+    var rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    rl.question('Enter the code from that page here: ', function(code) {
+        rl.close();
+        oauth2Client.getToken(code, function(err, token) {
+            if (err) {
+                console.log('Error while trying to retrieve access token', err);
+                return;
+            }
+            oauth2Client.credentials = token;
+            storeToken(token);
+            callback(oauth2Client);
+        });
+    });
+}
 
-            res.json(weatherJson);
+/**
+ * Store token to disk be used in later program executions.
+ *
+ * @param {Object} token The token to store to disk.
+ */
+function storeToken(token) {
+    try {
+        fs.mkdirSync(TOKEN_DIR);
+    } catch (err) {
+        if (err.code != 'EXIST') {
+            throw err;
         }
-    })
-});
-
-
-
-
-const server = app.listen(process.env.PORT || 3000, function () {
-
-    const port = server.address().port ;
-    console.log('Example app listening on port ' + port);
-})
-
-function getDressCode(weatherJson){
-    var dressCode = "";
-    var weather = weatherJson.text;
-    switch (weather) {
-        case 'Sunny':
-            dressCode ="Looks like it's going to be sunny today. Make sure to pack your sun care products";
-            break;
-        case 'Cloudy':
-            dressCode ="Looks like it's going to be cloudy today!";
-            break;
-        case 'Rain':
-            dressCode ="Looks like it's going to be rainy today!. Dont forget your umbrella";
-            break;
-        case 'Scatterd Showers':
-            weatherJson.speech ="Looks like it's going to be scattered showers today!. Dont forget your umbrella";
-            break;
-
-        default:
-            dressCode = "Don't forget to dress for the weather";
-
     }
-    return dressCode;
+    fs.writeFile(TOKEN_PATH, JSON.stringify(token));
+    console.log('Token stored to ' + TOKEN_PATH);
+}
+
+/**
+ * Lists the next 10 events on the user's primary calendar.
+ *
+ * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ */
+function listEvents(auth) {
+    var calendar = google.calendar('v3');
+    calendar.events.list({
+        auth: auth,
+        calendarId: 'primary',
+        timeMin: (new Date()).toISOString(),
+        maxResults: 10,
+        singleEvents: true,
+        orderBy: 'startTime'
+    }, function(err, response) {
+        if (err) {
+            console.log('The API returned an error: ' + err);
+            return;
+        }
+        var events = response.items;
+        if (events.length == 0) {
+            console.log('No upcoming events found.');
+        } else {
+            console.log('Upcoming 10 events:');
+            for (var i = 0; i < events.length; i++) {
+                var event = events[i];
+                var start = event.start.dateTime || event.start.date;
+                console.log('%s - %s', start, event.summary);
+            }
+        }
+    });
 }
