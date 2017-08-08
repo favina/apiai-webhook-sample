@@ -2,74 +2,102 @@ const express = require('express')
 const app = express()
 const request = require('request');
 
-var google = require('googleapis');
-
-app.post('/calendar', function (req, res) {
-
-    var calendarId;
-    if (req.params.calendarId){
-        calendar = req.params.calendarId;
+app.get('/hi', function (req, res) {
+    var city;
+    if (req.query.city){
+        city = req.query.city;
     }
     else
     {
-        calendarId = "en.uk#holiday@group.v.calendar.google.com";
+        city = "london";
     }
-
-    var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+calendarId+'/events';
-
-
-    request(cal, function (error, response, body) {
-        var events = {}
+    var yahooweather = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22' + city + '%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+    request(yahooweather, function (error, response, body) {
+        var weatherJson = {}
         if (error){
             response.status(500);
         }
         else {
-
-            events.type = 0;
-            events.speech = listEvents(cal.calendarId);
-            events.displayText = weatherJson.speech;
-            events.data = {};
-            events.contextOut = [ ];
-            events.source = " Our weather App";
-
-
-
+            weatherJson = JSON.parse(body).query.results.channel.item.forecast[0];
+            weatherJson.location = JSON.parse(body).query.results.channel.location;
+            weatherJson.type = 0;
+            weatherJson.speech =  "Yo it looks like today in " + weatherJson.location.city + " will be a high of " +
+                weatherJson.high + " and a low of " + weatherJson.low + ". " +
+                getDressCode(weatherJson);
+            weatherJson.displayText = weatherJson.speech;
+            weatherJson.data = {};
+            weatherJson.contextOut = [ ];
+            weatherJson.source = " Our weather App"
+            res.json(weatherJson);
         }
-    });
-
-
+    })
 });
 
-function listEvents(calendarId) {
-    var calendar = google.calendar('v3');
-    calendar.events.list({
-        auth: auth,
-        calendarId: calendarId,
-        timeMin: (new Date()).toISOString(),
-        maxResults: 10,
-        singleEvents: true,
-        orderBy: 'startTime'
-    }, function(err, response) {
-        if (err) {
-            console.log('The API returned an error: ' + err);
-            return;
+
+app.post('/dress', function (req, res) {
+    var city;
+    if (req.params.city){
+        city = req.params.city;
+    }
+    else
+    {
+        city = "london";
+    }
+    var yahooweather = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22' + city + '%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+    request(yahooweather, function (error, response, body) {
+        var weatherJson = {}
+        if (error){
+            response.status(500);
         }
-        var events = response.items;
-        if (events.length == 0) {
-            console.log('No upcoming events found.');
-        } else {
-            console.log('Upcoming 10 events:');
-            for (var i = 0; i < events.length; i++) {
-                var event = events[i];
-                var start = event.start.dateTime || event.start.date;
-                console.log('%s - %s', start, event.summary);
-            }
+        else {
+            weatherJson = JSON.parse(body).query.results.channel.item.forecast[0];
+            weatherJson.location = JSON.parse(body).query.results.channel.location;
+            weatherJson.type = 0;
+            weatherJson.speech =  "Yo it looks like today in " + weatherJson.location.city + " it will be a high of " +
+                weatherJson.high + " and a low of " + weatherJson.low + ". " +
+                getDressCode(weatherJson);
+            weatherJson.displayText = weatherJson.speech;
+            weatherJson.data = {};
+            weatherJson.contextOut = [ ];
+            weatherJson.source = " Our weather App";
+
+
+            res.json(weatherJson);
         }
-    });
-}
+    })
+});
+
+
+
 
 const server = app.listen(process.env.PORT || 3000, function () {
 
     const port = server.address().port ;
     console.log('Example app listening on port ' + port);
 })
+
+function getDressCode(weatherJson){
+    var dressCode = "";
+    var weather = weatherJson.text;
+    switch (weather) {
+        case 'Sunny':
+            dressCode ="Looks like it's going to be sunny today. Make sure to pack your sun care products";
+            break;
+        case 'Cloudy':
+            dressCode ="Looks like it's going to be cloudy today!";
+            break;
+        case 'Rain':
+            dressCode ="Looks like it's going to be rainy today!. Dont forget your umbrella";
+            break;
+        case 'Scatterd Showers':
+            weatherJson.speech ="Looks like it's going to be scattered showers today!. Dont forget your umbrella";
+            break;
+
+        default:
+            dressCode = "Don't forget to dress for the weather";
+
+    }
+    return dressCode;
+}
+
+
