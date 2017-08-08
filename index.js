@@ -6,16 +6,27 @@ var google = require('googleapis');
 
 app.post('/calendar', function (req, res) {
 
-    var events = {}
-    request(events, function (error, response, body) {
+    var calendarId;
+    if (req.params.calendarId){
+        calendar = req.params.calendarId;
+    }
+    else
+    {
+        calendarId = "en.uk#holiday@group.v.calendar.google.com";
+    }
 
+    var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+calendarId+'/events';
+
+
+    request(cal, function (error, response, body) {
+        var events = {}
         if (error){
             response.status(500);
         }
         else {
 
             events.type = 0;
-            events.speech = listEvents();
+            events.speech = listEvents(cal.calendarId);
             events.displayText = weatherJson.speech;
             events.data = {};
             events.contextOut = [ ];
@@ -29,11 +40,11 @@ app.post('/calendar', function (req, res) {
 
 });
 
-function listEvents(auth) {
+function listEvents(calendarId) {
     var calendar = google.calendar('v3');
     calendar.events.list({
         auth: auth,
-        calendarId: 'primary',
+        calendarId: calendarId,
         timeMin: (new Date()).toISOString(),
         maxResults: 10,
         singleEvents: true,
