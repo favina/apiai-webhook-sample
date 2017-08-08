@@ -27,7 +27,7 @@ app.post('/calendar', function (req, res) {
         else {
 
             events.type = 0;
-            events.speech = "your events"+ listEvents(events);
+            events.speech = "your events"+ listEvents();
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
@@ -41,11 +41,11 @@ app.post('/calendar', function (req, res) {
 
 });
 
-function listEvents(calendarId) {
+function listEvents() {
     var calendar = google.calendar('v3');
     calendar.events.list({
         auth: auth,
-        calendarId: calendarId,
+        calendarId: 'primary',
         timeMin: (new Date()).toISOString(),
         maxResults: 10,
         singleEvents: true,
