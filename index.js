@@ -8,7 +8,7 @@ app.get('/calendar', function (req, res) {
 
     var calendarId;
     if (req.params.calendarId){
-        calendar = req.params.calendarId;
+        calendarId = req.params.calendarId;
 
     }
     else
@@ -16,7 +16,7 @@ app.get('/calendar', function (req, res) {
         calendarId = "en.uk#holiday@group.v.calendar.google.com";
     }
 
-    var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+calendarId+'/events';
+    var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+ calendarId +'/events';
 
 
     request(cal, function (error, response) {
