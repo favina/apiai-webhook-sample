@@ -2,46 +2,56 @@ const express = require('express')
 const app = express()
 const request = require('request');
 
+var google = require('googleapis');
 
-var passport = require('passport');
+app.post('/calendar', function (req, res) {
 
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+    request(weatherJson, function (error, response, body) {
 
-// Use the GoogleStrategy within Passport.
-//   Strategies in Passport require a `verify` function, which accept
-//   credentials (in this case, an accessToken, refreshToken, and Google
-//   profile), and invoke a callback with a user object.
-passport.use(new GoogleStrategy({
-        clientID: "195086391779-d84p1svvvdvrvp3fe8uc6rsm0eerlrue.apps.googleusercontent.com",
-        clientSecret: "uLyfQ6R1MiJORHv9gRGct2nG",
-        callbackURL: "http://localhost:3000"
-    },
-    function(accessToken, refreshToken, profile, done) {
-        User.findOrCreate({ googleId: profile.id }, function (err, user) {
-            return done(err, user);
-        });
-    }
-));
-// GET /auth/google
-//   Use passport.authenticate() as route middleware to authenticate the
-//   request.  The first step in Google authentication will involve
-//   redirecting the user to google.com.  After authorization, Google
-//   will redirect the user back to this application at /auth/google/callback
-app.post('/auth/google',
-    passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+        if (error){
+            response.status(500);
+        }
+        else {
 
-// GET /auth/google/callback
-//   Use passport.authenticate() as route middleware to authenticate the
-//   request.  If authentication fails, the user will be redirected back to the
-//   login page.  Otherwise, the primary route function function will be called,
-//   which, in this example, will redirect the user to the home page.
-app.post('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }),
-    function(req, res) {
-        res.redirect('https://www.google.co.uk/');
+            weatherJson.type = 0;
+            weatherJson.speech = listEvents();
+            weatherJson.displayText = weatherJson.speech;
+            weatherJson.data = {};
+            weatherJson.contextOut = [ ];
+            weatherJson.source = " Our weather App";
+
+
+
+        }
     });
-const server = app.listen(process.env.PORT || 3000, function () {
 
-    const port = server.address().port ;
-    console.log('Example app listening on port ' + port);
-})
+
+});
+
+function listEvents() {
+    var calendar = google.calendar('v3');
+    calendar.events.list({
+        auth: auth,
+        calendarId: 'primary',
+        timeMin: (new Date()).toISOString(),
+        maxResults: 10,
+        singleEvents: true,
+        orderBy: 'startTime'
+    }, function(err, response) {
+        if (err) {
+            console.log('The API returned an error: ' + err);
+            return;
+        }
+        var events = response.items;
+        if (events.length == 0) {
+            console.log('No upcoming events found.');
+        } else {
+            console.log('Upcoming 10 events:');
+            for (var i = 0; i < events.length; i++) {
+                var event = events[i];
+                var start = event.start.dateTime || event.start.date;
+                console.log('%s - %s', start, event.summary);
+            }
+        }
+    });
+}
