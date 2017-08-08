@@ -28,7 +28,7 @@ app.post('/calendar', function (req, res) {
 
             events.type = 0;
             events.speech = "your events";
-            events.displayText = weatherJson.speech;
+            events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
             events.source = " Our weather App";
