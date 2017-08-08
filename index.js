@@ -19,7 +19,7 @@ app.post('/calendar', function (req, res) {
     var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+calendarId+'/events';
 
 
-    request(cal, function (error, response, body) {
+    request(cal, function (error, response) {
         var events = {}
         if (error){
             response.status(500);
