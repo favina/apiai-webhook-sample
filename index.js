@@ -5,20 +5,21 @@ const request = require('request');
 var google = require('googleapis');
 
 app.post('/calendar', function (req, res) {
-    var weatherJson = {}
-    request(weatherJson, function (error, response, body) {
+
+    var events = {}
+    request(events, function (error, response, body) {
 
         if (error){
-            console.log('Error');
+            response.status(500);
         }
         else {
 
-            weatherJson.type = 0;
-            weatherJson.speech = listEvents();
-            weatherJson.displayText = weatherJson.speech;
-            weatherJson.data = {};
-            weatherJson.contextOut = [ ];
-            weatherJson.source = " Our weather App";
+            events.type = 0;
+            events.speech = listEvents();
+            events.displayText = weatherJson.speech;
+            events.data = {};
+            events.contextOut = [ ];
+            events.source = " Our weather App";
 
 
 
