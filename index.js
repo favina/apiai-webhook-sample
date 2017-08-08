@@ -4,12 +4,12 @@ const request = require('request');
 
 var google = require('googleapis');
 
-app.post('/calendar', function (req, res) {
-
+app.get('/calendar', function (req, res) {
+    var weatherJson = {}
     request(weatherJson, function (error, response, body) {
 
         if (error){
-            response.status(500);
+            console.log('Error');
         }
         else {
 
@@ -28,7 +28,7 @@ app.post('/calendar', function (req, res) {
 
 });
 
-function listEvents() {
+function listEvents(auth) {
     var calendar = google.calendar('v3');
     calendar.events.list({
         auth: auth,
@@ -55,3 +55,9 @@ function listEvents() {
         }
     });
 }
+
+const server = app.listen(process.env.PORT || 3000, function () {
+
+    const port = server.address().port ;
+    console.log('Example app listening on port ' + port);
+})
