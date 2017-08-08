@@ -13,7 +13,7 @@ app.post('/calendar', function (req, res) {
     }
     else
     {
-        calendarId = "en.uk#holiday@group.v.calendar.google.com";
+        calendarId = 'en.uk#holiday@group.v.calendar.google.com';
     }
 
     var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+ calendarId +'/events';
