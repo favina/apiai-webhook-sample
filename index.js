@@ -9,6 +9,7 @@ app.post('/calendar', function (req, res) {
     var calendarId;
     if (req.params.calendarId){
         calendar = req.params.calendarId;
+
     }
     else
     {
@@ -32,7 +33,7 @@ app.post('/calendar', function (req, res) {
             events.contextOut = [ ];
             events.source = " Our weather App";
 
-
+            res.json(events);
 
         }
     });
