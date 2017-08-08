@@ -4,7 +4,7 @@ const request = require('request');
 
 var google = require('googleapis');
 
-app.post('/calendar', function (req, res) {
+app.get('/calendar', function (req, res) {
 
     var calendarId;
     if (req.params.calendarId){
@@ -27,7 +27,7 @@ app.post('/calendar', function (req, res) {
         else {
 
             events.type = 0;
-            events.speech = "your events" +listEvents(calendarId);
+            events.speech = "your events";
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
