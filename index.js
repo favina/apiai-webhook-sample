@@ -4,7 +4,7 @@ const request = require('request');
 
 var google = require('googleapis');
 
-app.get('/calendar', function (req, res) {
+app.post('/calendar', function (req, res) {
 
     var calendarId;
     if (req.params.calendarId){
