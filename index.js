@@ -27,7 +27,7 @@ app.post('/calendar', function (req, res) {
         else {
 
             events.type = 0;
-            events.speech = "your events"+ listEvents(calendarId);
+            events.speech = "your events"+ listEvents(events);
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
