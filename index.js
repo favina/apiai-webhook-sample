@@ -4,6 +4,8 @@ const request = require('request');
 
 var google = require('googleapis');
 
+
+
 app.post('/calendar', function (req, res) {
 
     var calendarId;
@@ -25,9 +27,10 @@ app.post('/calendar', function (req, res) {
             response.status(500);
         }
         else {
+            var Token = app.getUser().authToken;
 
             events.type = 0;
-            events.speech = "your events";
+            events.speech = "your events"+ Token;
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
