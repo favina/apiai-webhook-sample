@@ -29,10 +29,10 @@ app.post('/calendar', function (req, res) {
         }
         else {
 
-            var Token = apps.getUser().authToken;
+           
 
             events.type = 0;
-            events.speech = "your events"+ Token;
+            events.speech = "your events";
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
