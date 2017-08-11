@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const request = require('request');
+const apps = new ApiAiApp({ request, response });
 
 var google = require('googleapis');
 
@@ -27,10 +28,11 @@ app.post('/calendar', function (req, res) {
             response.status(500);
         }
         else {
-            
+
+            var Token = apps.getUser().authToken;
 
             events.type = 0;
-            events.speech = "your events";
+            events.speech = "your events"+ Token;
             events.displayText = events.speech;
             events.data = {};
             events.contextOut = [ ];
