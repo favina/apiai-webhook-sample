@@ -1,75 +1,39 @@
 const express = require('express')
 const app = express()
 const request = require('request');
-const apps = new ApiAiApp({ request, response });
 
-var google = require('googleapis');
-
-
+var date;
 
 app.post('/calendar', function (req, res) {
 
-    var calendarId;
-    if (req.params.calendarId){
-        calendarId = req.params.calendarId;
-
+    if (req.params.date){
+        date = req.params.date;
+    }else{
+        date = "2018-05-07";
     }
-    else
-    {
-        calendarId = 'en.uk#holiday@group.v.calendar.google.com';
-    }
+    var events = 'https://www.googleapis.com/calendar/v3/calendars/en.uk%23holiday%40group.v.calendar.google.com/events?maxResults=10&key=AIzaSyD6gcqMMXeOzBAxg-05yDGaED4G4cKd0l4';
 
-    var cal = 'https://www.googleapis.com/calendar/v3/calendars/'+ calendarId +'/events';
+    request(events, function (error, response, body) {
+        var eventsJson = {}
 
-
-    request(cal, function (error, response) {
-        var events = {}
         if (error){
             response.status(500);
         }
         else {
+           // eventsJson = JSON.parse(body).items[0].start.date;
+            eventsJson.events = JSON.parse(body).items[0].summary;
+            eventsJson.type = 0;
+            eventsJson.speech =  "You're events as follows" + eventsJson.events;
+            eventsJson.displayText = eventsJson.speech;
+            eventsJson.data = {};
+            eventsJson.contextOut = [ ];
+            eventsJson.source = " My App";
 
-
-
-            events.type = 0;
-            events.speech = "your events" + events.listEvents();
-            events.displayText = events.speech;
-            events.data = {};
-            events.contextOut = [ ];
-            events.source = " Our weather App";
-
-            res.json(events);
+            res.json(eventsJson);
 
         }
-    });
 
-    function listEvents() {
-        var calendar = google.calendar('v3');
-        calendar.events.list({
-            auth: auth,
-            calendarId: 'primary',
-            timeMin: (new Date()).toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime'
-        }, function(err, response) {
-            if (err) {
-                console.log('The API returned an error: ' + err);
-                return;
-            }
-            var events = response.items;
-            if (events.length == 0) {
-                console.log('No upcoming events found.');
-            } else {
-                console.log('Upcoming 10 events:');
-                for (var i = 0; i < events.length; i++) {
-                    var event = events[i];
-                    var start = event.start.dateTime || event.start.date;
-                    console.log('%s - %s', start, event.summary);
-                }
-            }
-        });
-    }
+    });
 
 });
 
