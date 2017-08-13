@@ -1,46 +1,29 @@
-const express = require('express')
-const app = express()
-const request = require('request');
+// initialize the express application
+var express = require("express"),
+    app = express();
 
-var date;
+// initialize the Fitbit API client
+var FitbitApiClient = require("fitbit-node"),
+    client = new FitbitApiClient("228PNR", "1e3237f1d5159110fdf1db8000f70a83");
 
-app.post('/calendar', function (req, res) {
-
-    if (req.params.date){
-        date = req.params.date;
-    }else{
-        date = "2018-05-07";
-    }
-    var events = 'https://www.googleapis.com/calendar/v3/calendars/en.uk%23holiday%40group.v.calendar.google.com/events?maxResults=10&key=AIzaSyD6gcqMMXeOzBAxg-05yDGaED4G4cKd0l4';
-
-    request(events, function (error, response, body) {
-        var eventsJson = {}
-
-        if (error){
-            response.status(500);
-        }
-        else {
-           // eventsJson = JSON.parse(body).items[0].start.date;
-            eventsJson.events = JSON.parse(body).items[0].summary;
-            eventsJson.type = 0;
-            eventsJson.speech =  "You're events as follows" + eventsJson.events;
-            eventsJson.displayText = eventsJson.speech;
-            eventsJson.data = {};
-            eventsJson.contextOut = [ ];
-            eventsJson.source = " My App";
-
-            res.json(eventsJson);
-
-        }
-
-    });
-
+// redirect the user to the Fitbit authorization page
+app.get("/authorize", function (req, res) {
+    // request access to the user's activity, heartrate, location, nutrion, profile, settings, sleep, social, and weight scopes
+    res.redirect(client.getAuthorizeUrl('activity heartrate location nutrition profile settings sleep social weight', 'http://localhost:3000/'));
 });
 
+// handle the callback from the Fitbit authorization flow
+app.get("/callback", function (req, res) {
+    // exchange the authorization code we just received for an access token
+    client.getAccessToken(req.query.code, 'http://localhost:3000/').then(function (result) {
+        // use the access token to fetch the user's profile information
+        client.get("/profile.json", result.access_token).then(function (results) {
+            res.send(results[0]);
+        });
+    }).catch(function (error) {
+        res.send(error);
+    });
+});
 
-
-const server = app.listen(process.env.PORT || 3000, function () {
-
-    const port = server.address().port ;
-    console.log('Example app listening on port ' + port);
-})
+// launch the server
+app.listen(3000);
