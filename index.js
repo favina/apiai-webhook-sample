@@ -4,7 +4,7 @@ var express = require("express"),
 
 // initialize the Fitbit API client
 var FitbitApiClient = require("fitbit-node"),
-    client = new FitbitApiClient("228PNR", "1e3237f1d5159110fdf1db8000f70a83");
+    client = new FitbitApiClient("");
 
 // redirect the user to the Fitbit authorization page
 app.get("/authorize", function (req, res) {
