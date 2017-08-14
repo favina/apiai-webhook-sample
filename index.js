@@ -13,13 +13,19 @@ let app = express();
 app.post('/check', function (req, res) {
     // noinspection JSAnnotator
     var fitbit = 'fitbit'(req);
-    const assistant = new Assistant({request: req, response: res});
+
+    const app = new ApiAiApp({ request, response });
 
     if (fitbit == "fitbit" && fitbit == !null){
 
         // fulfill action business logic
         function responseHandler (assistant) {
-            assistant.tell('We swear to serve the master of the Precious.');
+            app.tell({speech: 'Great see you at your appointment!',
+                displayText: 'Great, we will see you on '
+                + app.getDateTime().date.month
+                + '/' + app.getDateTime().date.day
+                + ' at ' + app.getDateTime().time.hours
+                + (app.getDateTime().time.minutes || '')});
         }
 
         assistant.handleRequest(responseHandler);
