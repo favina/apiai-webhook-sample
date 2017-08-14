@@ -13,6 +13,7 @@ let app = express();
 app.post('/check', function (req, res) {
     // noinspection JSAnnotator
     var fitbit = 'fitbit'(req);
+    const assistant = new Assistant({request: req, response: res});
 
     if (fitbit == "fitbit" && fitbit == !null){
 
