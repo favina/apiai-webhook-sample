@@ -12,9 +12,9 @@ let app = express();
 
 app.post('/check', function (req, res) {
     // noinspection JSAnnotator
-    var fitbit = 'Fitbit'(req);
+    var fitbit = 'fitbit'(req);
 
-    if (fitbit == "Fitbit" && fitbit == !null){
+    if (fitbit == "fitbit" && fitbit == !null){
 
         // fulfill action business logic
         function responseHandler (assistant) {
