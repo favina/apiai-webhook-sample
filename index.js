@@ -1,29 +1,36 @@
-// initialize the express application
-var express = require("express"),
-    app = express();
+'use strict';
 
-// initialize the Fitbit API client
-var FitbitApiClient = require("fitbit-node"),
-    client = new FitbitApiClient("228PNR", "1e3237f1d5159110fdf1db8000f70a83");
+process.env.DEBUG = 'actions-on-google:*';
+let Assistant = require('actions-on-google').ApiAiAssistant;
+let express = require('express');
 
-// redirect the user to the Fitbit authorization page
-app.get("/authorize", function (req, res) {
-    // request access to the user's activity, heartrate, location, nutrion, profile, settings, sleep, social, and weight scopes
-    res.redirect(client.getAuthorizeUrl('activity heartrate location nutrition profile settings sleep social weight', 'http://localhost:3000/'));
+
+let app = express();
+
+// require basic auth
+var auth = require('basic-auth');
+
+app.post('/', function (req, res) {
+    // check autentication
+    var user = auth(req)
+    if (user.name === config.auth.user && user.pass === config.auth.password) {
+        const assistant = new Assistant({request: req, response: res});
+
+        // fulfill action business logic
+        function responseHandler (assistant) {
+            assistant.tell('We swear to serve the master of the Precious.');
+        }
+
+        assistant.handleRequest(responseHandler);
+
+    } else {
+        console.log('User not autenticated');
+        res.send('Bad user/pass');
+    }
 });
 
-// handle the callback from the Fitbit authorization flow
-app.get("/callback", function (req, res) {
-    // exchange the authorization code we just received for an access token
-    client.getAccessToken(req.query.code, 'http://localhost:3000/').then(function (result) {
-        // use the access token to fetch the user's profile information
-        client.get("/profile.json", result.access_token).then(function (results) {
-            res.send(results[0]);
-        });
-    }).catch(function (error) {
-        res.send(error);
-    });
-});
+const server = app.listen(process.env.PORT || 3000, function () {
 
-// launch the server
-app.listen(3000);
+    const port = server.address().port ;
+    console.log('Example app listening on port ' + port);
+})
