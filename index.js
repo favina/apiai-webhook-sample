@@ -1,50 +1,29 @@
-const express = require('express')
-const app = express()
-const request = require('request');
+const app = new ApiAiApp({ request, response });
+const WELCOME_INTENT = 'input.welcome';
+const DATETIME = 'datetime';
 
+function welcomeIntent (app) {
+    app.askForDateTime('When do you want to come in?',
+        'Which date works best for you?',
+        'What time of day works best for you?');
+}
 
-process.env.DEBUG = 'actions-on-google:*';
-let Assistant = require('actions-on-google').ApiAiAssistant;
-let express = require('express');
+function datetime (app) {
+    app.tell({speech: 'Great see you at your appointment!',
+        displayText: 'Great, we will see you on '
+        + app.getDateTime().date.month
+        + '/' + app.getDateTime().date.day
+        + ' at ' + app.getDateTime().time.hours
+        + (app.getDateTime().time.minutes || '')});
+}
 
-
-let app = express();
-
-app.post('/check', function (req, res) {
-    // noinspection JSAnnotator
-    var fitbit = 'fitbit'(req);
-
-    const app = new ApiAiApp({ request, response });
-
-    if (fitbit == "fitbit" && fitbit == !null){
-
-        // fulfill action business logic
-        function responseHandler (assistant) {
-            app.tell({speech: 'Great see you at your appointment!',
-                displayText: 'Great, we will see you on '
-                + app.getDateTime().date.month
-                + '/' + app.getDateTime().date.day
-                + ' at ' + app.getDateTime().time.hours
-                + (app.getDateTime().time.minutes || '')});
-        }
-
-        assistant.handleRequest(responseHandler);
-
-    } else {
-
-        res.send('Bad Request');
-    }
-
-});
+const actionMap = new Map();
+actionMap.set(WELCOME_INTENT, welcomeIntent);
+actionMap.set(DATETIME, datetime);
+app.handleRequest(actionMap);
 
 
 
-
-const server = app.listen(process.env.PORT || 3000, function () {
-
-    const port = server.address().port ;
-    console.log('Example app listening on port ' + port);
-})
 
 
 
